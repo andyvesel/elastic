@@ -14,7 +14,7 @@ Tested on a multiple k3s installations.
 - A domain with a DNS A record pointing to your cluster's public IP
 - Port 80 and 443 open on the ingress node
 
-**Set the CI/CD variables**
+*Set the CI/CD variables*
 
 If deploying via a pipeline (GitHub Actions, GitLab CI, Jenkins, etc.), set the following as repository/environment variables:
 
@@ -25,9 +25,10 @@ If deploying via a pipeline (GitHub Actions, GitLab CI, Jenkins, etc.), set the 
 | `STORAGE_PROVISIONER` | CSI provisioner for your platform | `rancher.io/local-path` |
 | `KUBECONFIG` | *(secret)* base64-encoded kubeconfig for a scoped service account | — |
 
-The `KUBECONFIG` secret should use the scoped `elasticsearch-deployer` service account (see `ci/deployer-rbac.yaml`), not the cluster admin kubeconfig. This limits blast radius if the credential leaks.
+**IMPORTANT!**
+The `KUBECONFIG` secret should use the scoped `elasticsearch-deployer` service account (see `ci/deployer-rbac.yaml`), not the cluster admin kubeconfig.
 
-**Local deployment:**
+*Local deployment:*
 
 ```bash
 export DOMAIN=elastic.example.com
