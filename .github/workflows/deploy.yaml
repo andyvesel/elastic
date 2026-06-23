@@ -46,11 +46,9 @@ jobs:
 
       - name: Wait for pods
         run: |
-          kubectl wait pod \
-            -l app=elasticsearch-master \
-            -n $NAMESPACE \
-            --for=condition=Ready \
-            --timeout=180s
+          sleep 10
+          kubectl rollout status statefulset/elasticsearch-master \
+            -n $NAMESPACE --timeout=300s
 
       - name: Run tests
         env:
