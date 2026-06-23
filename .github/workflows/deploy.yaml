@@ -53,4 +53,6 @@ jobs:
             --timeout=180s
 
       - name: Run tests
+        env:
+          DOMAIN: ${{ vars.DOMAIN }}
         run: bash tests/test.sh

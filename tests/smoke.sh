@@ -3,7 +3,7 @@
 set -euo pipefail
 
 NAMESPACE=elasticsearch
-DOMAIN=elastic.veselov.cc
+DOMAIN=${DOMAIN:?DOMAIN env var required}
 
 pass() { echo "✅ $1"; }
 fail() { echo "❌ $1"; exit 1; }
@@ -11,8 +11,12 @@ fail() { echo "❌ $1"; exit 1; }
 ES_PASS=$(kubectl get secret elasticsearch-master-credentials -n "$NAMESPACE" \
   -o jsonpath='{.data.password}' | base64 -d)
 
-# ES responds on HTTPS
-HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" -u "elastic:$ES_PASS" "https://$DOMAIN")
+# Retry for up to 60s — ES may need time after pods are Ready
+for i in $(seq 1 12); do
+  HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" -u "elastic:$ES_PASS" "https://$DOMAIN")
+  [[ "$HTTP_CODE" == "200" ]] && break
+  sleep 5
+done
 [[ "$HTTP_CODE" == "200" ]] && pass "ES is up (HTTPS 200)" || fail "ES not reachable (HTTP $HTTP_CODE)"
 
 # Cluster is not red
@@ -20,4 +24,4 @@ STATUS=$(curl -sk -u "elastic:$ES_PASS" "https://$DOMAIN/_cluster/health" \
   | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"])')
 [[ "$STATUS" != "red" ]] && pass "Cluster status: $STATUS" || fail "Cluster status is RED"
 
-echo "Smoke test passed ✅"
+echo "Smoke test passed"
