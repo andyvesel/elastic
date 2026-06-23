@@ -1,0 +1,60 @@
+name: Deploy & Test Elasticsearch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  RELEASE: elasticsearch-k8s
+  NAMESPACE: elasticsearch
+  DOMAIN: elastic.veselov.cc
+  EMAIL: admin@veselov.cc
+  STORAGE_PROVISIONER: rancher.io/local-path
+  INGRESS_EXTERNAL_IP: "159.69.219.227"
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubectl & helm
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          curl -fsSL https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+          chmod +x /usr/local/bin/kubectl
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+          kubectl cluster-info
+
+      - name: Apply sealed credentials
+        run: kubectl apply -f secrets/sealed-credentials.yaml
+
+      - name: Deploy
+        run: |
+          helm repo add elastic https://helm.elastic.co
+          helm repo update
+          helm dependency update
+          helm upgrade --install $RELEASE . \
+            -n $NAMESPACE --create-namespace \
+            --set domain=$DOMAIN \
+            --set email=$EMAIL \
+            --set storageProvisioner=$STORAGE_PROVISIONER \
+            --timeout 5m
+
+      - name: Wait for pods
+        run: |
+          kubectl wait pod \
+            -l app=elasticsearch-master \
+            -n $NAMESPACE \
+            --for=condition=Ready \
+            --timeout=180s
+
+      - name: Run tests
+        run: bash tests/test.sh
