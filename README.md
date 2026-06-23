@@ -10,7 +10,7 @@ Tested on a multiple k3s installations.
 ## Prerequisites
 
 - A Kubernetes cluster with 4 nodes (1 control-plane, 3 workers with at least 4GB RAM each)
-- `kubectl`, `helm` >= 3, `kubeseal` installed locally
+- `kubectl`, `helm` >= 3 installed locally
 - A domain with a DNS A record pointing to your cluster's public IP
 - Port 80 and 443 open on the ingress node
 
@@ -89,7 +89,7 @@ pass: {{ index .data "password" | base64decode }}
 bash teardown.sh
 ```
 
-Removes the Helm release, sealed secret, namespace, StorageClass, and ClusterIssuer. Does not remove node labels/taints or cluster components (cert-manager, ingress-nginx, sealed-secrets controller).
+Removes the Helm release, namespace, StorageClass, and ClusterIssuer. Does not remove node labels/taints or cluster components (cert-manager, ingress-nginx).
 
 ---
 
@@ -110,15 +110,6 @@ kubectl get crd | grep cert-manager | awk '{print $1}' | xargs kubectl delete cr
 # Reinstall
 helm upgrade --install cert-manager jetstack/cert-manager \
   --namespace cert-manager --create-namespace --set crds.enabled=true
-```
-
-**Sealed secret apply fails with "namespace not found"**
-
-The namespace must exist before applying the sealed secret. Create it first:
-
-```bash
-kubectl create namespace elasticsearch
-kubectl apply -f secrets/sealed-credentials.yaml
 ```
 
 **Pods stuck in `Pending`**
@@ -146,15 +137,6 @@ Port 6443 is likely blocked. Verify and restart the agent:
 nc -zv <control-plane-ip> 6443
 systemctl restart k3s-agent
 ```
-
-**Sealed secret not decrypting**
-
-```bash
-kubectl get pods -n kube-system | grep sealed
-kubectl describe sealedsecret elasticsearch-credentials -n elasticsearch
-```
-
-If the cluster was rebuilt, the controller's private key changed. Re-seal using the new public key.
 
 **Cluster status `red`**
 
