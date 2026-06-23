@@ -1,0 +1,16 @@
+Elasticsearch has been deployed.
+
+Get credentials:
+
+  kubectl exec -n elasticsearch elasticsearch-master-0 -c elasticsearch -- \
+    sh -c 'echo "user: elastic"; echo "pass: $ELASTIC_PASSWORD"'
+
+Cluster health:
+
+  kubectl exec -n elasticsearch elasticsearch-master-0 -c elasticsearch -- \
+    sh -c 'curl -sk -u elastic:$ELASTIC_PASSWORD https://localhost:9200/_cluster/health?pretty'
+
+{{- if .Values.domain }}
+
+External endpoint: https://{{ .Values.domain }}
+{{- end }}
