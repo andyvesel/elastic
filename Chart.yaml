@@ -1,0 +1,9 @@
+apiVersion: v2
+name: elasticsearch-k8s
+description: HA Elasticsearch on Kubernetes
+version: 0.1.0
+appVersion: "8.5.1"
+dependencies:
+  - name: elasticsearch
+    version: 8.5.1
+    repository: https://helm.elastic.co

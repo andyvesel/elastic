@@ -1,0 +1,53 @@
+domain: ""   # required: e.g. elastic.example.com
+email: ""    # required: Let's Encrypt registration email
+
+# StorageClass provisioner — override for your cloud provider:
+#   k3s/bare-metal: rancher.io/local-path
+#   AWS:            ebs.csi.aws.com
+#   GCP:            pd.csi.storage.gke.io
+#   Azure:          disk.csi.azure.com
+#   Longhorn:       driver.longhorn.io
+storageProvisioner: rancher.io/local-path
+
+elasticsearch:
+  replicas: 3
+  protocol: https
+  esJavaOpts: "-Xmx1g -Xms1g"
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  antiAffinity: hard
+  nodeSelector:
+    role: elasticsearch
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: elasticsearch
+      effect: NoSchedule
+  volumeClaimTemplate:
+    storageClassName: elasticsearch-storage
+    accessModes: ["ReadWriteOnce"]
+    resources:
+      requests:
+        storage: 20Gi
+  service:
+    type: ClusterIP
+  secret:
+    enabled: false
+  extraEnvs:
+    - name: ELASTIC_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: elasticsearch-credentials
+          key: password
+    - name: ELASTIC_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: elasticsearch-credentials
+          key: username
+  ingress:
+    enabled: false
