@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-metrics
+  namespace: elasticsearch
+  labels:
+    app: elasticsearch-master
+spec:
+  selector:
+    app: elasticsearch-master
+  ports:
+    - name: metrics
+      port: 9200
+      targetPort: 9200
+  clusterIP: None
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: elasticsearch
+  namespace: elasticsearch
+  labels:
+    app: elasticsearch-master
+spec:
+  selector:
+    matchLabels:
+      app: elasticsearch-master
+  endpoints:
+    - port: metrics
+      path: /_cluster/health
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      basicAuth:
+        username:
+          name: elasticsearch-master-credentials
+          key: username
+        password:
+          name: elasticsearch-master-credentials
+          key: password
+      interval: 30s
