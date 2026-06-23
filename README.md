@@ -42,35 +42,9 @@ helm upgrade --install cert-manager jetstack/cert-manager \
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx --create-namespace \
   --set "controller.service.externalIPs={<public-ip>}"
-
-kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.27.3/controller.yaml
 ```
 
-### 3. Seal credentials
-
-```bash
-PASSWORD=$(openssl rand -base64 32)
-
-kubectl get secret -n kube-system \
-  -l sealedsecrets.bitnami.com/sealed-secrets-key \
-  -o jsonpath='{.items[0].data.tls\.crt}' | base64 -d > pub.pem
-
-cat <<EOF | kubeseal --format yaml --cert pub.pem > secrets/sealed-credentials.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: elasticsearch-credentials
-  namespace: elasticsearch
-type: Opaque
-stringData:
-  username: elastic
-  password: "${PASSWORD}"
-EOF
-
-kubectl apply -f secrets/sealed-credentials.yaml
-```
-
-### 4. Deploy ES
+### 3. Deploy ES
 
 ```bash
 helm dependency update
@@ -103,7 +77,7 @@ bash tests/test.sh   # full suite
 ### Getting the access to ES
 
 ```bash
-kubectl get secret elasticsearch-credentials -n elasticsearch \
+kubectl get secret elasticsearch-master-credentials -n elasticsearch \
   -o go-template='user: {{ index .data "username" | base64decode }}
 pass: {{ index .data "password" | base64decode }}
 '

@@ -9,7 +9,7 @@ echo "=== Full test suite ==="
 NAMESPACE=elasticsearch
 DOMAIN=elastic.veselov.cc
 ES_USER=elastic
-ES_PASS=$(kubectl get secret elasticsearch-credentials -n "$NAMESPACE" \
+ES_PASS=$(kubectl get secret elasticsearch-master-credentials -n "$NAMESPACE" \
   -o jsonpath='{.data.password}' | base64 -d)
 ES_URL="https://$DOMAIN"
 

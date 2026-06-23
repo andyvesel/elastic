@@ -8,7 +8,7 @@ DOMAIN=elastic.veselov.cc
 pass() { echo "✅ $1"; }
 fail() { echo "❌ $1"; exit 1; }
 
-ES_PASS=$(kubectl get secret elasticsearch-credentials -n "$NAMESPACE" \
+ES_PASS=$(kubectl get secret elasticsearch-master-credentials -n "$NAMESPACE" \
   -o jsonpath='{.data.password}' | base64 -d)
 
 # ES responds on HTTPS

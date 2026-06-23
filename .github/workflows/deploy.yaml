@@ -36,11 +36,6 @@ jobs:
           chmod 600 ~/.kube/config
           kubectl cluster-info
 
-      - name: Apply sealed credentials
-        run: |
-          kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
-          kubectl apply -f secrets/sealed-credentials.yaml
-
       - name: Deploy
         run: |
           helm repo add elastic https://helm.elastic.co
