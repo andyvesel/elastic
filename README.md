@@ -70,7 +70,7 @@ EOF
 kubectl apply -f secrets/sealed-credentials.yaml
 ```
 
-### 4. Deploy
+### 4. Deploy ES
 
 ```bash
 helm dependency update
@@ -98,21 +98,14 @@ bash tests/smoke.sh  # quick sanity check
 bash tests/test.sh   # full suite
 ```
 
----
+### Getting the access to ES
 
-## Tradeoffs
-
-**local-path storage over distributed storage**
-PVs are tied to specific nodes. If a node is lost, the data on that node relies on Elasticsearch's own shard replication for recovery. A solution like Longhorn or Ceph adds node-loss resilience at the cost of complexity and performance overhead.
-
-**Sealed Secrets over Vault**
-No external infrastructure needed and works naturally with GitOps. The downside is that secret rotation requires re-sealing and redeploying. Vault adds dynamic secrets, audit logging, and fine-grained access control but is a stateful system that needs its own operations.
-
-**Single control-plane node**
-If the control-plane goes down, the ES cluster keeps serving data but certificates will not renew and ingress will stop routing. A second control-plane node with an HA datastore removes this risk.
-
-**HTTP-01 ACME challenge**
-Requires port 80 to be publicly reachable. DNS-01 avoids this and supports wildcard certificates but requires a DNS provider API integration.
+```bash
+kubectl get secret elasticsearch-credentials -n elasticsearch \
+  -o go-template='user: {{ index .data "username" | base64decode }}
+pass: {{ index .data "password" | base64decode }}
+'
+```
 
 ---
 
