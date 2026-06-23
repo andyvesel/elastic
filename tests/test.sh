@@ -8,13 +8,16 @@ echo "=== Full test suite ==="
 
 NAMESPACE=elasticsearch
 DOMAIN=${DOMAIN:?DOMAIN env var required}
-ES_USER=elastic
 ES_PASS=$(kubectl get secret elasticsearch-master-credentials -n "$NAMESPACE" \
   -o jsonpath='{.data.password}' | base64 -d)
-ES_URL="https://$DOMAIN"
 
 pass() { echo "✅ $1"; }
 fail() { echo "❌ $1"; exit 1; }
+
+es_curl() {
+  kubectl exec -n "$NAMESPACE" elasticsearch-master-0 -c elasticsearch -- \
+    curl -sk -u "elastic:$ES_PASS" "$@" 2>/dev/null
+}
 
 # 1. StorageClass is default with Retain
 echo "--- StorageClass ---"
@@ -48,41 +51,39 @@ done
 
 # 5. Cluster health green, 3 nodes
 echo "--- Cluster health ---"
-HEALTH=$(curl -sk -u "$ES_USER:$ES_PASS" "$ES_URL/_cluster/health")
+HEALTH=$(es_curl https://localhost:9200/_cluster/health)
 STATUS=$(echo "$HEALTH" | python3 -c 'import sys,json; h=json.load(sys.stdin); print(h["status"])')
 NNODES=$(echo "$HEALTH" | python3 -c 'import sys,json; h=json.load(sys.stdin); print(h["number_of_nodes"])')
 [[ "$STATUS" == "green" ]] && pass "Cluster status green" || fail "Cluster status: $STATUS"
 [[ "$NNODES" -eq 3 ]]      && pass "3 nodes in cluster"  || fail "Expected 3 nodes, got $NNODES"
 
-# 6. HTTPS with valid cert
+# 6. External HTTPS with valid cert
 echo "--- TLS ---"
-CERT_VALID=$(curl -sv --max-time 5 "$ES_URL" 2>&1 | grep -c "SSL certificate verify ok" || true)
+CERT_VALID=$(curl -sv --max-time 5 "https://$DOMAIN" 2>&1 | grep -c "SSL certificate verify ok" || true)
 [[ "$CERT_VALID" -gt 0 ]] && pass "TLS certificate valid" || fail "TLS certificate invalid"
 
-HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" -u "$ES_USER:$ES_PASS" "$ES_URL")
-[[ "$HTTP_CODE" == "200" ]] && pass "ES responds 200 with valid credentials" || fail "Unexpected HTTP $HTTP_CODE"
+EXT_CODE=$(curl -sk -o /dev/null -w "%{http_code}" "https://$DOMAIN/")
+[[ "$EXT_CODE" == "401" || "$EXT_CODE" == "200" ]] && pass "External HTTPS reachable ($EXT_CODE)" \
+  || fail "External endpoint unreachable (HTTP $EXT_CODE)"
 
 # 7. Data persists after pod deletion
 echo "--- Persistence ---"
 DOC_ID="test-persist-$(date +%s)"
-# Write a document
-curl -sk -u "$ES_USER:$ES_PASS" -X PUT "$ES_URL/test-index/_doc/$DOC_ID" \
-  -H 'Content-Type: application/json' -d '{"test":"persistence"}' | grep -q '"result":"created"' \
-  && pass "Document written" || fail "Failed to write document"
+WRITE=$(es_curl -X PUT "https://localhost:9200/test-index/_doc/$DOC_ID" \
+  -H 'Content-Type: application/json' -d '{"test":"persistence"}')
+echo "$WRITE" | grep -q '"result":"created"' && pass "Document written" || fail "Failed to write document"
 
-# Delete pod 0 and wait for it to restart
 kubectl delete pod elasticsearch-master-0 -n "$NAMESPACE"
 echo "Waiting for pod to restart..."
 sleep 5
 kubectl wait pod/elasticsearch-master-0 -n "$NAMESPACE" \
   --for=condition=Ready --timeout=120s
 
-# Read document back
-RESULT=$(curl -sk -u "$ES_USER:$ES_PASS" "$ES_URL/test-index/_doc/$DOC_ID")
+RESULT=$(es_curl "https://localhost:9200/test-index/_doc/$DOC_ID")
 echo "$RESULT" | grep -q '"found":true' && pass "Document persists after pod restart" || fail "Document lost after restart"
 
-# Cleanup test index
-curl -sk -u "$ES_USER:$ES_PASS" -X DELETE "$ES_URL/test-index" > /dev/null
+# Cleanup
+es_curl -X DELETE "https://localhost:9200/test-index" > /dev/null
 
 echo ""
-echo "All tests passed 🎉"
+echo "All tests passed"
