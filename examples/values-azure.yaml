@@ -1,0 +1,12 @@
+# Azure AKS example
+domain: elastic.example.com
+email: admin@example.com
+storageProvisioner: disk.csi.azure.com
+
+elasticsearch:
+  volumeClaimTemplate:
+    storageClassName: elasticsearch-storage
+    accessModes: ["ReadWriteOnce"]
+    resources:
+      requests:
+        storage: 20Gi

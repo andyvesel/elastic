@@ -1,0 +1,12 @@
+# Bare-metal / k3s example
+domain: elastic.example.com
+email: admin@example.com
+storageProvisioner: rancher.io/local-path
+
+elasticsearch:
+  volumeClaimTemplate:
+    storageClassName: elasticsearch-storage
+    accessModes: ["ReadWriteOnce"]
+    resources:
+      requests:
+        storage: 20Gi

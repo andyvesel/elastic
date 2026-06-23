@@ -91,6 +91,8 @@ Storage provisioner values by platform:
 | Azure AKS | `disk.csi.azure.com` |
 | Longhorn | `driver.longhorn.io` |
 
+Ready-made values files for each platform are in `examples/`.
+
 ### 5. Run the tests
 
 ```bash
