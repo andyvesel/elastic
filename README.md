@@ -107,6 +107,14 @@ pass: {{ index .data "password" | base64decode }}
 '
 ```
 
+### Teardown
+
+```bash
+bash teardown.sh
+```
+
+Removes the Helm release, sealed secret, namespace, StorageClass, and ClusterIssuer. Does not remove node labels/taints or cluster components (cert-manager, ingress-nginx, sealed-secrets controller).
+
 ---
 
 ## Troubleshooting
