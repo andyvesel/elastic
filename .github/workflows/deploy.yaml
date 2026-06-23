@@ -37,7 +37,9 @@ jobs:
           kubectl cluster-info
 
       - name: Apply sealed credentials
-        run: kubectl apply -f secrets/sealed-credentials.yaml
+        run: |
+          kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          kubectl apply -f secrets/sealed-credentials.yaml
 
       - name: Deploy
         run: |
