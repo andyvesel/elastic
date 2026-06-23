@@ -14,6 +14,15 @@ Tested on a multiple k3s installations.
 - A domain with a DNS A record pointing to your cluster's public IP
 - Port 80 and 443 open on the ingress node
 
+For the GitHub Actions pipeline, set these repository variables under **Settings → Secrets and variables → Actions → Variables**:
+
+| Variable | Example |
+|----------|---------|
+| `DOMAIN` | `elastic.example.com` |
+| `EMAIL` | `admin@example.com` |
+| `STORAGE_PROVISIONER` | `rancher.io/local-path` |
+| `KUBECONFIG` | *(secret)* base64-encoded kubeconfig |
+
 ---
 
 ## Deployment

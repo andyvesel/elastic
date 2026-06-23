@@ -11,10 +11,6 @@ on:
 env:
   RELEASE: elasticsearch-k8s
   NAMESPACE: elasticsearch
-  DOMAIN: elastic.veselov.cc
-  EMAIL: admin@veselov.cc
-  STORAGE_PROVISIONER: rancher.io/local-path
-  INGRESS_EXTERNAL_IP: "159.69.219.227"
 
 jobs:
   deploy-and-test:
@@ -43,9 +39,9 @@ jobs:
           helm dependency update
           helm upgrade --install $RELEASE . \
             -n $NAMESPACE --create-namespace \
-            --set domain=$DOMAIN \
-            --set email=$EMAIL \
-            --set storageProvisioner=$STORAGE_PROVISIONER \
+            --set domain=${{ vars.DOMAIN }} \
+            --set email=${{ vars.EMAIL }} \
+            --set storageProvisioner=${{ vars.STORAGE_PROVISIONER }} \
             --timeout 5m
 
       - name: Wait for pods
