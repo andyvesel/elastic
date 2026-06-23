@@ -11,7 +11,7 @@ metadata:
   namespace: elasticsearch
 rules:
   - apiGroups: ["", "apps", "batch", "networking.k8s.io", "policy"]
-    resources: ["pods", "services", "configmaps", "endpoints", "persistentvolumeclaims", "serviceaccounts", "statefulsets", "deployments", "replicasets", "jobs", "ingresses", "poddisruptionbudgets", "secrets"]
+    resources: ["pods", "services", "configmaps", "endpoints", "persistentvolumeclaims", "serviceaccounts", "statefulsets", "deployments", "replicasets", "jobs", "ingresses", "poddisruptionbudgets", "secrets", "networkpolicies", "cronjobs"]
     verbs: ["*"]
   - apiGroups: [""]
     resources: ["pods/exec"]
