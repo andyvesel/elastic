@@ -30,7 +30,7 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
-          kubectl cluster-info
+          kubectl get namespace elasticsearch 2>/dev/null || echo "First deploy"
 
       - name: Deploy
         run: |
