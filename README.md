@@ -14,6 +14,7 @@ Tested on a multiple k3s installations.
 - A domain with a DNS A record pointing to your cluster's public IP
 - Port 80 and 443 open on the ingress node
 
+
 *Set the CI/CD variables*
 
 If deploying via a pipeline (GitHub Actions, GitLab CI, Jenkins, etc.), set the following as repository/environment variables:
@@ -25,8 +26,10 @@ If deploying via a pipeline (GitHub Actions, GitLab CI, Jenkins, etc.), set the 
 | `STORAGE_PROVISIONER` | CSI provisioner for your platform | `rancher.io/local-path` |
 | `KUBECONFIG` | *(secret)* base64-encoded kubeconfig for a scoped service account | — |
 
+
 **IMPORTANT!**
 The `KUBECONFIG` secret should use the scoped `elasticsearch-deployer` service account (see `ci/deployer-rbac.yaml`), not the cluster admin kubeconfig.
+
 
 *Local deployment:*
 
@@ -105,13 +108,42 @@ pass: {{ index .data "password" | base64decode }}
 '
 ```
 
-### Teardown
+### Teardown the ES
 
 ```bash
 bash teardown.sh
 ```
 
 Removes the Helm release, namespace, StorageClass, and ClusterIssuer. Does not remove node labels/taints or cluster components (cert-manager, ingress-nginx).
+
+---
+
+## Monitoring
+
+The chart includes a `ServiceMonitor` for Prometheus Operator. If installed, Prometheus will scrape ES cluster health every 30s automatically.
+
+Without Prometheus, check cluster health manually:
+
+```bash
+kubectl exec -n elasticsearch elasticsearch-master-0 -c elasticsearch -- \
+  sh -c 'curl -sk -u elastic:$ELASTIC_PASSWORD https://localhost:9200/_cluster/health?pretty'
+```
+
+Key metrics to watch:
+- `status` — green/yellow/red
+- `unassigned_shards` — should be 0
+- `number_of_nodes` — should be 3
+
+---
+
+## Backups
+
+A daily CronJob (`elasticsearch-backup`) creates ES snapshots at 02:00 UTC. Verify the latest snapshot:
+
+```bash
+kubectl exec -n elasticsearch elasticsearch-master-0 -c elasticsearch -- \
+  sh -c 'curl -sk -u elastic:$ELASTIC_PASSWORD https://localhost:9200/_snapshot/backup/_all?pretty'
+```
 
 ---
 
