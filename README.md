@@ -23,7 +23,9 @@ If deploying via a pipeline (GitHub Actions, GitLab CI, Jenkins, etc.), set the 
 | `DOMAIN` | Public domain for the ES endpoint | `elastic.example.com` |
 | `EMAIL` | Let's Encrypt registration email | `admin@example.com` |
 | `STORAGE_PROVISIONER` | CSI provisioner for your platform | `rancher.io/local-path` |
-| `KUBECONFIG` | *(secret)* base64-encoded kubeconfig | — |
+| `KUBECONFIG` | *(secret)* base64-encoded kubeconfig for a scoped service account | — |
+
+The `KUBECONFIG` secret should use the scoped `elasticsearch-deployer` service account (see `ci/deployer-rbac.yaml`), not the cluster admin kubeconfig. This limits blast radius if the credential leaks.
 
 **Local deployment:**
 
@@ -69,9 +71,9 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
 helm dependency update
 helm upgrade --install elasticsearch-k8s . \
   -n elasticsearch --create-namespace \
-  --set domain=elastic.example.com \
-  --set email=admin@example.com \
-  --set storageProvisioner=<provisioner>
+  --set domain=$DOMAIN \
+  --set email=$EMAIL \
+  --set storageProvisioner=$STORAGE_PROVISIONER
 ```
 
 Storage provisioner values by platform:
