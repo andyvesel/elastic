@@ -10,10 +10,7 @@ metadata:
   name: elasticsearch-deployer
   namespace: elasticsearch
 rules:
-  - apiGroups: ["", "apps", "batch", "networking.k8s.io"]
-    resources: ["*"]
-    verbs: ["*"]
-  - apiGroups: ["helm.sh"]
+  - apiGroups: ["", "apps", "batch", "networking.k8s.io", "policy"]
     resources: ["*"]
     verbs: ["*"]
 ---
