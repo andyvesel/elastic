@@ -11,8 +11,11 @@ metadata:
   namespace: elasticsearch
 rules:
   - apiGroups: ["", "apps", "batch", "networking.k8s.io", "policy"]
-    resources: ["*"]
+    resources: ["pods", "services", "configmaps", "endpoints", "persistentvolumeclaims", "serviceaccounts", "statefulsets", "deployments", "replicasets", "jobs", "ingresses", "poddisruptionbudgets", "secrets"]
     verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
