@@ -136,6 +136,15 @@ helm upgrade --install cert-manager jetstack/cert-manager \
   --namespace cert-manager --create-namespace --set crds.enabled=true
 ```
 
+**Sealed secret apply fails with "namespace not found"**
+
+The namespace must exist before applying the sealed secret. Create it first:
+
+```bash
+kubectl create namespace elasticsearch
+kubectl apply -f secrets/sealed-credentials.yaml
+```
+
 **Pods stuck in `Pending`**
 
 ```bash
