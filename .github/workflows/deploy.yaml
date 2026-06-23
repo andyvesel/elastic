@@ -2,7 +2,10 @@ name: Deploy & Test Elasticsearch
 
 on:
   push:
-    branches: [main]
+    branches:
+      - 'release/*'
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 env:
