@@ -15,9 +15,9 @@ Tested on a multiple k3s installations.
 - Port 80 and 443 open on the ingress node
 
 
-*Set the CI/CD variables*
+### Set the CI/CD variables
 
-If deploying via a pipeline (GitHub Actions, GitLab CI, Jenkins, etc.), set the following as repository/environment variables:
+If you deploy with pipeline (Gitlab, GHA, Jenkins), set the following variables:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
@@ -26,12 +26,10 @@ If deploying via a pipeline (GitHub Actions, GitLab CI, Jenkins, etc.), set the 
 | `STORAGE_PROVISIONER` | CSI provisioner for your platform | `rancher.io/local-path` |
 | `KUBECONFIG` | *(secret)* base64-encoded kubeconfig for a scoped service account | — |
 
-
 **IMPORTANT!**
 The `KUBECONFIG` secret should use the scoped `elasticsearch-deployer` service account (see `ci/deployer-rbac.yaml`), not the cluster admin kubeconfig.
 
-
-*Local deployment:*
+If you deploy from the localhost, set the env variables:
 
 ```bash
 export DOMAIN=elastic.example.com
@@ -69,7 +67,7 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   --set "controller.service.externalIPs={<public-ip>}"
 ```
 
-### 3. Deploy ES
+### 3. Deploy ElasticSearch
 
 ```bash
 helm dependency update
@@ -80,7 +78,7 @@ helm upgrade --install elasticsearch-k8s . \
   --set storageProvisioner=$STORAGE_PROVISIONER
 ```
 
-Storage provisioner values by platform:
+*Set the storageProvisioner variable according to your cloud provider platform:
 
 | Platform | `storageProvisioner` |
 |----------|----------------------|
@@ -90,7 +88,7 @@ Storage provisioner values by platform:
 | Azure AKS | `disk.csi.azure.com` |
 | Longhorn | `driver.longhorn.io` |
 
-Ready-made values files for each platform are in `examples/`.
+*Ready-made values files for each platform are in `examples/`.*
 
 ### 5. Run the tests
 
@@ -99,7 +97,7 @@ bash tests/smoke.sh  # quick sanity check
 bash tests/test.sh   # full suite
 ```
 
-### Getting the access to ES
+### Getting the access to ElasticSearch
 
 ```bash
 kubectl get secret elasticsearch-master-credentials -n elasticsearch \
